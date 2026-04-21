@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev:grapes": "node node_modules/grenache-grape/bin/grape.js --dp 20001 --aph 30001 --bn '127.0.0.1:20002' --dpa 10000 & node node_modules/grenache-grape/bin/grape.js --dp 20002 --aph 40001 --bn '127.0.0.1:20001' --dpa 10000",
-    "dev:node": "node --env-file=.env src/services/exchange/index.js",
+    "dev:node": "node --env-file=.env src/exchange/index.js",
     "dev:cluster": "node scripts/spawn-cluster.js",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "node --test 'src/**/__tests__/*.test.js'",

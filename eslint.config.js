@@ -22,6 +22,6 @@ export default [
     },
   },
   {
-    ignores: ['node_modules/', 'src/services/counter/data/'],
+    ignores: ['node_modules/'],
   },
 ];
