@@ -6,11 +6,17 @@ class Membership {
     this._wasEvicted = new Set();
   }
 
-  peerIds() { return this._clock.keys(); }
+  peerIds() {
+    return this._clock.keys();
+  }
 
-  has(peerId) { return this._clock.has(peerId); }
+  has(peerId) {
+    return this._clock.has(peerId);
+  }
 
-  get(peerId) { return this._clock.get(peerId); }
+  get(peerId) {
+    return this._clock.get(peerId);
+  }
 
   touch(peerId, ts, now) {
     const readmitted = !this._clock.has(peerId) && this._wasEvicted.has(peerId);
@@ -18,7 +24,7 @@ class Membership {
     const prev = this._clock.get(peerId) ?? 0;
     if (ts > prev) this._clock.set(peerId, ts);
     else if (!this._clock.has(peerId)) this._clock.set(peerId, 0);
-    
+
     this._lastSeen.set(peerId, now);
 
     if (readmitted) this._wasEvicted.delete(peerId);
@@ -28,8 +34,8 @@ class Membership {
   evictStale(now, thresholdMs) {
     const evicted = [];
     for (const [peer, t] of this._lastSeen) {
-      if (peer === this._self) continue; 
-      
+      if (peer === this._self) continue;
+
       if (now - t > thresholdMs) {
         evicted.push(peer);
         this._clock.delete(peer);
@@ -57,7 +63,9 @@ class Membership {
     return min === Infinity ? 0 : min;
   }
 
-  toJSON() { return Object.fromEntries(this._clock); }
+  toJSON() {
+    return Object.fromEntries(this._clock);
+  }
 }
 
 export { Membership };

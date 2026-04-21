@@ -70,7 +70,7 @@ test('touch does not flag re-admission for brand-new peers', () => {
 test('loadSnapshotClock clears stale eviction flags', () => {
   const m = new Membership('self');
   m.touch('a', 5, 1000);
-  m.evictStale(3000, 1000);     // flag 'a' as evicted
+  m.evictStale(3000, 1000); // flag 'a' as evicted
   m.loadSnapshotClock({ self: 10, a: 9 }, 5000);
   // 'a' is back via the snapshot — a subsequent message from 'a' must NOT
   // trigger another resync.

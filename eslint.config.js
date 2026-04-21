@@ -18,7 +18,7 @@ export default [
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
         },
-      ]
+      ],
     },
   },
   {

@@ -13,15 +13,24 @@ test('bids sort by price desc, asks by price asc', () => {
   b.addOrder(order('c', 'sell', 110, 1, [3, 'x']));
   b.addOrder(order('d', 'sell', 105, 1, [4, 'x']));
   const snap = b.serialize();
-  assert.deepEqual(snap.bids.map((o) => o.id), ['b', 'a']);
-  assert.deepEqual(snap.asks.map((o) => o.id), ['d', 'c']);
+  assert.deepEqual(
+    snap.bids.map((o) => o.id),
+    ['b', 'a']
+  );
+  assert.deepEqual(
+    snap.asks.map((o) => o.id),
+    ['d', 'c']
+  );
 });
 
 test('FIFO within same price level', () => {
   const b = new Orderbook();
   b.addOrder(order('a', 'buy', 100, 1, [2, 'x']));
   b.addOrder(order('b', 'buy', 100, 1, [1, 'x']));
-  assert.deepEqual(b.serialize().bids.map((o) => o.id), ['b', 'a']);
+  assert.deepEqual(
+    b.serialize().bids.map((o) => o.id),
+    ['b', 'a']
+  );
 });
 
 test('removeOrder by id returns true/false', () => {
@@ -38,7 +47,13 @@ test('cross: taker buy fills against cheapest ask, partial fill rests', () => {
   const taker = order('tk', 'buy', 100, 3, [2, 'y']);
   const trades = b.cross(taker);
   assert.equal(trades.length, 1);
-  assert.deepEqual(trades[0], { maker: 'mk', taker: 'tk', price: 100, amount: 2, ts: [2, 'y'] });
+  assert.deepEqual(trades[0], {
+    maker: 'mk',
+    taker: 'tk',
+    price: 100,
+    amount: 2,
+    ts: [2, 'y'],
+  });
   assert.equal(taker.remaining, 1);
   assert.equal(b.serialize().asks.length, 0);
 });

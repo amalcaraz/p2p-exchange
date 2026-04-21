@@ -29,17 +29,30 @@ class Exchange {
     this._evictionTimer = null;
   }
 
-  get state() { return this._state; }
-  get selfId() { return this._selfId; }
+  get state() {
+    return this._state;
+  }
+  get selfId() {
+    return this._selfId;
+  }
 
   onEvent(ev) {
-    if (this._state !== 'READY') { this._bootBuffer.push(ev); return; }
+    if (this._state !== 'READY') {
+      this._bootBuffer.push(ev);
+      return;
+    }
     this._handleEvent(ev);
   }
 
   startTimers() {
-    this._heartbeatTimer = setInterval(() => this._heartbeat(), this._cfg.HEARTBEAT_MS);
-    this._evictionTimer = setInterval(() => this._evictionTick(), this._cfg.HEARTBEAT_MS);
+    this._heartbeatTimer = setInterval(
+      () => this._heartbeat(),
+      this._cfg.HEARTBEAT_MS
+    );
+    this._evictionTimer = setInterval(
+      () => this._evictionTick(),
+      this._cfg.HEARTBEAT_MS
+    );
   }
 
   stopTimers() {
@@ -61,7 +74,9 @@ class Exchange {
       const ids = await this._discoverPeers();
       candidates = ids.filter((id) => id !== this._selfId);
     } catch (err) {
-      console.warn(`[exchange] ${this._selfId} discovery failed: ${err.message}`);
+      console.warn(
+        `[exchange] ${this._selfId} discovery failed: ${err.message}`
+      );
     }
 
     for (const id of candidates) {
@@ -86,7 +101,11 @@ class Exchange {
     const deferred = new Deferred();
     this._pending.set(orderId, { deferred, ts });
 
-    const ev = { type: 'order', ts, order: { id: orderId, side, price, amount, remaining: amount, ts } };
+    const ev = {
+      type: 'order',
+      ts,
+      order: { id: orderId, side, price, amount, remaining: amount, ts },
+    };
 
     try {
       await this._publish(ev);
@@ -100,7 +119,9 @@ class Exchange {
     return deferred.promise;
   }
 
-  getBook() { return this._engine.serializeBook(); }
+  getBook() {
+    return this._engine.serializeBook();
+  }
 
   getSnapshot() {
     return {
@@ -113,16 +134,25 @@ class Exchange {
   async _scheduleResync(reason, attempt = 0) {
     if (this._state !== 'READY') return;
 
-    const candidates = [...this._membership.peerIds()].filter((id) => id !== this._selfId);
+    const candidates = [...this._membership.peerIds()].filter(
+      (id) => id !== this._selfId
+    );
     if (candidates.length === 0) return;
 
-    console.log(`[exchange] ${this._selfId} scheduling resync (${reason})${attempt ? ` [retry ${attempt}]` : ''}`);
+    console.log(
+      `[exchange] ${this._selfId} scheduling resync (${reason})${attempt ? ` [retry ${attempt}]` : ''}`
+    );
 
     this._state = 'SYNCING';
     try {
-      const applied = await this._syncFromPeer(candidates, { requireAhead: true });
+      const applied = await this._syncFromPeer(candidates, {
+        requireAhead: true,
+      });
       if (!applied && attempt < 3) {
-        setTimeout(() => this._scheduleResync(reason, attempt + 1), 500 * Math.pow(2, attempt));
+        setTimeout(
+          () => this._scheduleResync(reason, attempt + 1),
+          500 * Math.pow(2, attempt)
+        );
       }
     } catch (err) {
       console.error('[exchange] resync failed:', err);
@@ -138,15 +168,23 @@ class Exchange {
         const s = await this._fetchSnapshot(peerId);
         if (!s) continue;
 
-        if (requireAhead && compareTs(s.snapshotTs, this._engine.lastAppliedTs) <= 0) continue;
+        if (
+          requireAhead &&
+          compareTs(s.snapshotTs, this._engine.lastAppliedTs) <= 0
+        )
+          continue;
 
         snap = s;
         break;
-      } catch { /* try next */ }
+      } catch {
+        /* try next */
+      }
     }
 
     if (!snap) {
-      console.warn(`[exchange] ${this._selfId} no snapshot source found; keeping current state`);
+      console.warn(
+        `[exchange] ${this._selfId} no snapshot source found; keeping current state`
+      );
 
       this._state = 'READY';
       this._flushBootBuffer();
@@ -178,7 +216,7 @@ class Exchange {
 
     const key = `${ev.ts[0]}:${ev.ts[1]}`;
     if (this._seen.has(key)) return;
-    
+
     this._seen.add(key);
     const [T, P] = ev.ts;
     this._clock.merge(T);
@@ -205,7 +243,9 @@ class Exchange {
     if (!entry) return;
 
     const book = this._engine.serializeBook();
-    const resting = book.bids.concat(book.asks).find((o) => o.id === ev.order.id);
+    const resting = book.bids
+      .concat(book.asks)
+      .find((o) => o.id === ev.order.id);
     const remaining = resting?.remaining ?? 0;
 
     entry.deferred.resolve({ orderId: ev.order.id, trades, remaining });
@@ -232,12 +272,17 @@ class Exchange {
   _heartbeat() {
     const ts = this._clock.bump();
     Promise.resolve(this._publish({ type: 'heartbeat', ts })).catch((err) => {
-      console.warn(`[exchange] ${this._selfId} heartbeat publish failed: ${err.message}`);
+      console.warn(
+        `[exchange] ${this._selfId} heartbeat publish failed: ${err.message}`
+      );
     });
   }
 
   _evictionTick() {
-    const evicted = this._membership.evictStale(Date.now(), this._cfg.PEER_EVICTION_MS);
+    const evicted = this._membership.evictStale(
+      Date.now(),
+      this._cfg.PEER_EVICTION_MS
+    );
     if (evicted.length > 0) this._drain();
   }
 }

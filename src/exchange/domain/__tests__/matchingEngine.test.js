@@ -3,9 +3,15 @@ import assert from 'node:assert/strict';
 import { MatchingEngine } from '../matchingEngine.js';
 
 function orderEv(id, side, price, amount, ts) {
-  return { type: 'order', ts, order: { id, side, price, amount, remaining: amount, ts } };
+  return {
+    type: 'order',
+    ts,
+    order: { id, side, price, amount, remaining: amount, ts },
+  };
 }
-function cancelEv(orderId, ts) { return { type: 'cancel', ts, orderId }; }
+function cancelEv(orderId, ts) {
+  return { type: 'cancel', ts, orderId };
+}
 
 test('apply: single order inserted, no trades', () => {
   const e = new MatchingEngine();
@@ -20,7 +26,13 @@ test('apply: crossing order produces trade and leaves remainder on book', () => 
   e.apply(orderEv('mk', 'sell', 100, 2, [1, 'x']));
   const trades = e.apply(orderEv('tk', 'buy', 100, 5, [2, 'y']));
   assert.equal(trades.length, 1);
-  assert.deepEqual(trades[0], { maker: 'mk', taker: 'tk', price: 100, amount: 2, ts: [2, 'y'] });
+  assert.deepEqual(trades[0], {
+    maker: 'mk',
+    taker: 'tk',
+    price: 100,
+    amount: 2,
+    ts: [2, 'y'],
+  });
   const book = e.serializeBook();
   assert.equal(book.asks.length, 0);
   assert.equal(book.bids.length, 1);
@@ -51,7 +63,10 @@ test('deterministic replay: identical sequence -> identical book + trades', () =
 });
 
 test('snapshot + replay equals full replay', () => {
-  const first = [orderEv('a', 'buy', 100, 3, [1, 'x']), orderEv('b', 'sell', 101, 2, [2, 'y'])];
+  const first = [
+    orderEv('a', 'buy', 100, 3, [1, 'x']),
+    orderEv('b', 'sell', 101, 2, [2, 'y']),
+  ];
   const rest = [orderEv('c', 'sell', 100, 2, [3, 'z'])];
   const full = new MatchingEngine();
   [...first, ...rest].forEach((ev) => full.apply(ev));

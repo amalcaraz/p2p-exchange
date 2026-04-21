@@ -10,7 +10,8 @@ class Orderbook {
     const list = this._sideList(order.side);
 
     let i = 0;
-    while (i < list.length && this._compare(order.side, list[i], order) <= 0) i++;
+    while (i < list.length && this._compare(order.side, list[i], order) <= 0)
+      i++;
 
     list.splice(i, 0, order);
   }
@@ -18,7 +19,10 @@ class Orderbook {
   removeOrder(id) {
     for (const list of [this._bids, this._asks]) {
       const i = list.findIndex((o) => o.id === id);
-      if (i >= 0) { list.splice(i, 1); return true; }
+      if (i >= 0) {
+        list.splice(i, 1);
+        return true;
+      }
     }
 
     return false;
@@ -30,15 +34,24 @@ class Orderbook {
 
     while (taker.remaining > 0 && opposite.length > 0) {
       const top = opposite[0];
-      const crosses = taker.side === 'buy' ? taker.price >= top.price : taker.price <= top.price;
+      const crosses =
+        taker.side === 'buy'
+          ? taker.price >= top.price
+          : taker.price <= top.price;
 
       if (!crosses) break;
 
       const amount = Math.min(taker.remaining, top.remaining);
-      trades.push({ maker: top.id, taker: taker.id, price: top.price, amount, ts: taker.ts });
+      trades.push({
+        maker: top.id,
+        taker: taker.id,
+        price: top.price,
+        amount,
+        ts: taker.ts,
+      });
       taker.remaining -= amount;
       top.remaining -= amount;
-      
+
       if (top.remaining === 0) opposite.shift();
     }
     return trades;
@@ -54,10 +67,13 @@ class Orderbook {
     this._asks = snap.asks.map((o) => ({ ...o }));
   }
 
-  _sideList(side) { return side === 'buy' ? this._bids : this._asks; }
+  _sideList(side) {
+    return side === 'buy' ? this._bids : this._asks;
+  }
 
   _compare(side, a, b) {
-    if (a.price !== b.price) return side === 'buy' ? b.price - a.price : a.price - b.price;
+    if (a.price !== b.price)
+      return side === 'buy' ? b.price - a.price : a.price - b.price;
     return compareTs(a.ts, b.ts);
   }
 }

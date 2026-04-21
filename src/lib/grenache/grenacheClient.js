@@ -42,7 +42,9 @@ class GrenacheClient {
       });
       if (!last.err) return last;
       if (attempt < MAP_RETRIES) {
-        await new Promise((r) => setTimeout(r, MAP_RETRY_DELAY_MS * Math.pow(2, attempt)));
+        await new Promise((r) =>
+          setTimeout(r, MAP_RETRY_DELAY_MS * Math.pow(2, attempt))
+        );
       }
     }
     return last;
@@ -50,10 +52,20 @@ class GrenacheClient {
 
   async request(serviceName, payload, timeout = 10000) {
     return new Promise((resolve, reject) => {
-      this._peer.request(serviceName, payload, { timeout, retry: MAP_RETRIES }, (err, result) => {
-        if (err) reject(new GrenacheError(`Request to ${serviceName} failed: ${err.message}`));
-        else resolve(result);
-      });
+      this._peer.request(
+        serviceName,
+        payload,
+        { timeout, retry: MAP_RETRIES },
+        (err, result) => {
+          if (err)
+            reject(
+              new GrenacheError(
+                `Request to ${serviceName} failed: ${err.message}`
+              )
+            );
+          else resolve(result);
+        }
+      );
     });
   }
 

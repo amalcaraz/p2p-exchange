@@ -15,7 +15,11 @@ async function discoverNodes({
   await client.start();
   try {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const { results } = await client.broadcast(serviceName, { action: 'whoami' }, { timeout });
+      const { results } = await client.broadcast(
+        serviceName,
+        { action: 'whoami' },
+        { timeout }
+      );
       const ids = (results || []).map((r) => r?.nodeId).filter(Boolean);
       if (ids.length > 0) return ids;
       if (attempt + 1 < maxAttempts) {

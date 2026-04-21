@@ -14,7 +14,7 @@ const nodeScript = path.resolve(__dirname, '../src/exchange/index.js');
 const children = [];
 for (let i = 0; i < count; i++) {
   const child = fork(nodeScript, [], {
-    env: { ...process.env },            // each child auto-generates its own SELF_ID
+    env: { ...process.env }, // each child auto-generates its own SELF_ID
     execArgv: ['--env-file=.env'],
     stdio: 'inherit',
   });
@@ -22,7 +22,13 @@ for (let i = 0; i < count; i++) {
 }
 
 const shutdown = () => {
-  for (const c of children) { try { c.kill('SIGTERM'); } catch {} }
+  for (const c of children) {
+    try {
+      c.kill('SIGTERM');
+    } catch {
+      /* ignore */
+    }
+  }
   setTimeout(() => process.exit(0), 500);
 };
 process.on('SIGINT', shutdown);

@@ -12,7 +12,14 @@ test('enqueue out of order; drain returns events in total order', () => {
   q.enqueue(ev(1, 'b'));
   q.enqueue(ev(2, 'a'));
   const out = q.drain(10);
-  assert.deepEqual(out.map((e) => e.ts), [[1, 'b'], [2, 'a'], [3, 'a']]);
+  assert.deepEqual(
+    out.map((e) => e.ts),
+    [
+      [1, 'b'],
+      [2, 'a'],
+      [3, 'a'],
+    ]
+  );
 });
 
 test('ties broken by nodeId', () => {
@@ -20,7 +27,13 @@ test('ties broken by nodeId', () => {
   q.enqueue(ev(1, 'b'));
   q.enqueue(ev(1, 'a'));
   const out = q.drain(5);
-  assert.deepEqual(out.map((e) => e.ts), [[1, 'a'], [1, 'b']]);
+  assert.deepEqual(
+    out.map((e) => e.ts),
+    [
+      [1, 'a'],
+      [1, 'b'],
+    ]
+  );
 });
 
 test('drain blocks when head ts > minKnownClock', () => {
@@ -37,7 +50,10 @@ test('drain partially — returns only stable events', () => {
   q.enqueue(ev(1, 'a'));
   q.enqueue(ev(5, 'b'));
   const out = q.drain(3);
-  assert.deepEqual(out.map((e) => e.ts), [[1, 'a']]);
+  assert.deepEqual(
+    out.map((e) => e.ts),
+    [[1, 'a']]
+  );
   assert.deepEqual(q.peek().ts, [5, 'b']);
 });
 

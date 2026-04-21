@@ -18,7 +18,11 @@ async function rediscover() {
   if (rediscovering) return;
   rediscovering = true;
   try {
-    const { results } = await client.broadcast(PEER_SERVICE, { action: 'whoami' }, { timeout: 2000 });
+    const { results } = await client.broadcast(
+      PEER_SERVICE,
+      { action: 'whoami' },
+      { timeout: 2000 }
+    );
     const now = Date.now();
     for (const r of results || []) {
       if (r?.nodeId) peers.set(r.nodeId, now);
@@ -48,14 +52,25 @@ function resolveNode(prefix) {
   if (!prefix) return current;
   const matches = [...peers.keys()].filter((id) => id.startsWith(prefix));
   if (matches.length === 1) return matches[0];
-  if (matches.length === 0) { console.log(`no node matches "${prefix}"`); return null; }
-  console.log(`ambiguous prefix "${prefix}": ${matches.join(', ')}`); return null;
+  if (matches.length === 0) {
+    console.log(`no node matches "${prefix}"`);
+    return null;
+  }
+  console.log(`ambiguous prefix "${prefix}": ${matches.join(', ')}`);
+  return null;
 }
 
 async function callNode(id, action, payload = {}) {
-  if (!id) { console.log('no current node — run "nodes" then "use <id>"'); return null; }
+  if (!id) {
+    console.log('no current node — run "nodes" then "use <id>"');
+    return null;
+  }
   try {
-    return await client.request(`${RPC_SERVICE_PREFIX}_${id}`, { action, ...payload }, 10_000);
+    return await client.request(
+      `${RPC_SERVICE_PREFIX}_${id}`,
+      { action, ...payload },
+      10_000
+    );
   } catch (err) {
     console.log(`error calling ${id}: ${err.message}`);
     return null;
@@ -63,7 +78,14 @@ async function callNode(id, action, payload = {}) {
 }
 
 function formatBook(book) {
-  const top = (side, dir) => side.slice(0, 10).map((o) => `  ${dir} ${o.price.toString().padStart(4)} x ${o.remaining}  (${o.id})`).join('\n');
+  const top = (side, dir) =>
+    side
+      .slice(0, 10)
+      .map(
+        (o) =>
+          `  ${dir} ${o.price.toString().padStart(4)} x ${o.remaining}  (${o.id})`
+      )
+      .join('\n');
   return [
     `asks (${book.asks.length}):`,
     top(book.asks, 'ask') || '  (empty)',
@@ -73,9 +95,14 @@ function formatBook(book) {
 }
 
 async function cmd_nodes() {
-  if (peers.size === 0) { console.log('no nodes seen yet'); return; }
+  if (peers.size === 0) {
+    console.log('no nodes seen yet');
+    return;
+  }
   const now = Date.now();
-  for (const [id, ts] of [...peers.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const [id, ts] of [...peers.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0])
+  )) {
     const age = ((now - ts) / 1000).toFixed(1);
     const marker = id === current ? '*' : ' ';
     console.log(`  ${marker} ${id}   last seen ${age}s ago`);
@@ -84,11 +111,18 @@ async function cmd_nodes() {
 
 async function cmd_submit(args) {
   const [side, priceStr, amountStr] = args;
-  if (!['buy', 'sell'].includes(side) || !Number(priceStr) || !Number(amountStr)) {
-    console.log('usage: submit <buy|sell> <price> <amount>'); return;
+  if (
+    !['buy', 'sell'].includes(side) ||
+    !Number(priceStr) ||
+    !Number(amountStr)
+  ) {
+    console.log('usage: submit <buy|sell> <price> <amount>');
+    return;
   }
   const res = await callNode(current, 'submitOrder', {
-    side, price: Number(priceStr), amount: Number(amountStr),
+    side,
+    price: Number(priceStr),
+    amount: Number(amountStr),
   });
   if (res) console.log(JSON.stringify(res, null, 2));
 }
@@ -110,7 +144,10 @@ async function cmd_snapshot(args) {
 async function cmd_stress(args) {
   const n = Number(args[0]) || 50;
   const ids = [...peers.keys()];
-  if (ids.length === 0) { console.log('no nodes'); return; }
+  if (ids.length === 0) {
+    console.log('no nodes');
+    return;
+  }
   const t0 = Date.now();
   const jobs = Array.from({ length: n }, (_, i) => {
     const target = ids[i % ids.length];
@@ -119,26 +156,42 @@ async function cmd_stress(args) {
       price: 90 + Math.floor(Math.random() * 21),
       amount: 1 + Math.floor(Math.random() * 5),
     };
-    return client.request(`${RPC_SERVICE_PREFIX}_${target}`, { action: 'submitOrder', ...order }, 30_000);
+    return client.request(
+      `${RPC_SERVICE_PREFIX}_${target}`,
+      { action: 'submitOrder', ...order },
+      30_000
+    );
   });
   const results = await Promise.allSettled(jobs);
   const ok = results.filter((r) => r.status === 'fulfilled');
   const trades = ok.reduce((s, r) => s + (r.value?.trades?.length ?? 0), 0);
-  console.log(`stress: ${ok.length}/${n} ok, ${trades} trades, ${Date.now() - t0}ms`);
+  console.log(
+    `stress: ${ok.length}/${n} ok, ${trades} trades, ${Date.now() - t0}ms`
+  );
 }
 
 async function cmd_converge() {
   const ids = [...peers.keys()];
-  if (ids.length === 0) { console.log('no nodes'); return; }
+  if (ids.length === 0) {
+    console.log('no nodes');
+    return;
+  }
   const books = await Promise.all(ids.map((id) => callNode(id, 'getBook')));
   const ref = JSON.stringify(books[0]);
   const allMatch = books.every((b) => b && JSON.stringify(b) === ref);
-  console.log(`convergence across ${ids.length} nodes: ${allMatch ? 'PASS' : 'FAIL'}`);
+  console.log(
+    `convergence across ${ids.length} nodes: ${allMatch ? 'PASS' : 'FAIL'}`
+  );
   for (let i = 0; i < ids.length; i++) {
     const b = books[i];
-    if (!b) { console.log(`  ${ids[i]}  (request failed)`); continue; }
+    if (!b) {
+      console.log(`  ${ids[i]}  (request failed)`);
+      continue;
+    }
     const match = JSON.stringify(b) === ref;
-    console.log(`  ${ids[i]}  bids=${b.bids.length} asks=${b.asks.length}  ${match ? '' : 'DIVERGED'}`);
+    console.log(
+      `  ${ids[i]}  bids=${b.bids.length} asks=${b.asks.length}  ${match ? '' : 'DIVERGED'}`
+    );
   }
 }
 
@@ -146,18 +199,29 @@ async function handle(line) {
   const [cmd, ...args] = line.trim().split(/\s+/);
   if (!cmd) return;
   switch (cmd) {
-    case 'nodes':    return cmd_nodes();
+    case 'nodes':
+      return cmd_nodes();
     case 'use': {
       const id = resolveNode(args[0]);
-      if (id) { current = id; console.log(`now using ${id}`); }
+      if (id) {
+        current = id;
+        console.log(`now using ${id}`);
+      }
       return;
     }
-    case 'submit':   return cmd_submit(args);
-    case 'book':     return cmd_book(args);
-    case 'snapshot': return cmd_snapshot(args);
-    case 'stress':   return cmd_stress(args);
-    case 'converge': return cmd_converge();
-    case 'help':     help(); return;
+    case 'submit':
+      return cmd_submit(args);
+    case 'book':
+      return cmd_book(args);
+    case 'snapshot':
+      return cmd_snapshot(args);
+    case 'stress':
+      return cmd_stress(args);
+    case 'converge':
+      return cmd_converge();
+    case 'help':
+      help();
+      return;
     case 'quit':
     case 'exit':
       await shutdown(0);
@@ -169,7 +233,11 @@ async function handle(line) {
 
 async function shutdown(code = 0) {
   if (rediscoverTimer) clearInterval(rediscoverTimer);
-  try { client.stop(); } catch {}
+  try {
+    client.stop();
+  } catch {
+    /* ignore */
+  }
   process.exit(code);
 }
 
@@ -182,7 +250,9 @@ async function main() {
   rediscoverTimer = setInterval(rediscover, REDISCOVER_MS);
 
   if (peers.size === 0) {
-    console.log('[cli] no nodes yet — start a cluster with "npm run dev:cluster -- 3" in another terminal.');
+    console.log(
+      '[cli] no nodes yet — start a cluster with "npm run dev:cluster -- 3" in another terminal.'
+    );
   } else {
     current = [...peers.keys()][0];
     console.log(`[cli] found ${peers.size} node(s); current = ${current}`);
@@ -190,15 +260,24 @@ async function main() {
   help();
 
   const rl = readline.createInterface({
-    input: process.stdin, output: process.stdout, prompt: 'exchange> ',
+    input: process.stdin,
+    output: process.stdout,
+    prompt: 'exchange> ',
   });
   rl.prompt();
   rl.on('line', async (line) => {
-    try { await handle(line); } catch (err) { console.error(err); }
+    try {
+      await handle(line);
+    } catch (err) {
+      console.error(err);
+    }
     rl.prompt();
   });
   rl.on('close', () => shutdown(0));
   process.on('SIGINT', () => shutdown(0));
 }
 
-main().catch((err) => { console.error(err); shutdown(1); });
+main().catch((err) => {
+  console.error(err);
+  shutdown(1);
+});

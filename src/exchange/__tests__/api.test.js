@@ -9,13 +9,21 @@ function makeReply() {
 
 test('submitOrder forwards to node.submitOrder and replies with result', async () => {
   const node = {
-    submitOrder: async (o) => ({ orderId: 'n1:1', trades: [], remaining: o.amount }),
+    submitOrder: async (o) => ({
+      orderId: 'n1:1',
+      trades: [],
+      remaining: o.amount,
+    }),
   };
   const h = new ExchangeHandlers(node);
   const r = makeReply();
   await h.submitOrder(null, null, { side: 'buy', price: 100, amount: 1 }, r);
   assert.equal(r.calls[0].err, null);
-  assert.deepEqual(r.calls[0].res, { orderId: 'n1:1', trades: [], remaining: 1 });
+  assert.deepEqual(r.calls[0].res, {
+    orderId: 'n1:1',
+    trades: [],
+    remaining: 1,
+  });
 });
 
 test('submitOrder validates payload', async () => {
@@ -37,7 +45,11 @@ test('getBook returns node.getBook()', async () => {
 
 test('getSnapshot returns node.getSnapshot()', async () => {
   const node = {
-    getSnapshot: () => ({ book: { bids: [], asks: [] }, snapshotTs: [0, ''], knownClock: { n: 0 } }),
+    getSnapshot: () => ({
+      book: { bids: [], asks: [] },
+      snapshotTs: [0, ''],
+      knownClock: { n: 0 },
+    }),
   };
   const h = new ExchangeHandlers(node);
   const r = makeReply();
@@ -50,7 +62,11 @@ test('peerEvent forwards the wrapped event to node.onEvent and acks', async () =
   const node = { onEvent: (ev) => seen.push(ev) };
   const h = new ExchangeHandlers(node);
   const r = makeReply();
-  const ev = { type: 'order', ts: [1, 'a'], order: { id: 'a:1', side: 'buy', price: 100, amount: 1 } };
+  const ev = {
+    type: 'order',
+    ts: [1, 'a'],
+    order: { id: 'a:1', side: 'buy', price: 100, amount: 1 },
+  };
   await h.peerEvent(null, null, { event: ev }, r);
   assert.deepEqual(seen, [ev]);
   assert.deepEqual(r.calls[0].res, { ok: true });

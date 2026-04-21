@@ -10,8 +10,10 @@ class LamportClock {
     this._nodeId = nodeId;
     this._value = 0;
   }
-  
-  get value() { return this._value; }
+
+  get value() {
+    return this._value;
+  }
 
   bump() {
     this._value += 1;
@@ -22,7 +24,9 @@ class LamportClock {
     this._value = Math.max(this._value, remoteT) + 1;
   }
 
-  setTo(t) { this._value = t; }
+  setTo(t) {
+    this._value = t;
+  }
 }
 
 export { LamportClock, compareTs };

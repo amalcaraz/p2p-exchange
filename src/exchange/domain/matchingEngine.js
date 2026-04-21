@@ -13,9 +13,13 @@ class MatchingEngine {
     return [];
   }
 
-  serializeBook() { return this._book.serialize(); }
+  serializeBook() {
+    return this._book.serialize();
+  }
 
-  loadSnapshot(snap) { this._book.loadSnapshot(snap); }
+  loadSnapshot(snap) {
+    this._book.loadSnapshot(snap);
+  }
 
   _applyOrder(o) {
     const taker = { ...o, remaining: o.remaining ?? o.amount };

@@ -4,14 +4,18 @@ class DeliveryQueue {
   constructor() {
     this._events = [];
   }
-  get size() { return this._events.length; }
+  get size() {
+    return this._events.length;
+  }
 
   enqueue(event) {
     this._events.push(event);
     this._events.sort((a, b) => compareTs(a.ts, b.ts));
   }
 
-  peek() { return this._events[0] ?? null; }
+  peek() {
+    return this._events[0] ?? null;
+  }
 
   drain(minKnownClock) {
     const out = [];

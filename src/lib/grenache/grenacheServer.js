@@ -7,7 +7,7 @@ const { PeerRPCServer } = require('grenache-nodejs-http');
 
 const LISTEN_RETRIES = 3;
 const LISTEN_RETRY_DELAY_MS = 500;
-const ANNOUNCE_INTERVAL_MS = 5000;  // matches Grape's --dpa 10000 TTL
+const ANNOUNCE_INTERVAL_MS = 5000; // matches Grape's --dpa 10000 TTL
 
 class GrenacheServer {
   constructor({ grapeUrl, port }) {
@@ -34,7 +34,9 @@ class GrenacheServer {
         if (attempt === LISTEN_RETRIES) {
           throw new GrenacheError(`Failed to start server: ${err.message}`);
         }
-        await new Promise((r) => setTimeout(r, LISTEN_RETRY_DELAY_MS * Math.pow(2, attempt)));
+        await new Promise((r) =>
+          setTimeout(r, LISTEN_RETRY_DELAY_MS * Math.pow(2, attempt))
+        );
       }
     }
   }
@@ -50,7 +52,9 @@ class GrenacheServer {
   }
 
   announce(serviceName) {
-    this._link.startAnnouncing(serviceName, this._transport.port, { interval: ANNOUNCE_INTERVAL_MS });
+    this._link.startAnnouncing(serviceName, this._transport.port, {
+      interval: ANNOUNCE_INTERVAL_MS,
+    });
     this._announcedServices.push(serviceName);
   }
 
